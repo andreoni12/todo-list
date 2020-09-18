@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:todo/widgets/todo-card.dart';
 import 'models/item.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -41,7 +42,8 @@ class _HomePageState extends State<HomePage> {
 
     await initializeDateFormatting("pt_BR", null);
     var now = DateTime.now();
-    var formatter = DateFormat(DateFormat.YEAR_MONTH_DAY, 'pt_BR').format(now.toUtc());
+    var formatter =
+        DateFormat(DateFormat.YEAR_MONTH_DAY, 'pt_BR').format(now.toUtc());
 
     setState(() {
       widget.itens.add(
@@ -86,6 +88,9 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         backgroundColor: Colors.blue,
         title: TextFormField(
+          onFieldSubmitted: (value) {
+            add();
+          },
           controller: newTaskCtrl,
           keyboardType: TextInputType.text,
           decoration: InputDecoration(
@@ -103,28 +108,19 @@ class _HomePageState extends State<HomePage> {
           itemCount: widget.itens.length,
           itemBuilder: (BuildContext context, int index) {
             final item = widget.itens[index];
-            return Dismissible(
-              child: CheckboxListTile(
-                value: item.done,
-                key: Key(item.title),
-                title: Text(item.title),
-                subtitle: Text(item.creationTime),
-                onChanged: (value) {
+            return TodoCard(
+                item: item,
+                switchDone: (value) {
                   setState(() {
                     item.done = value;
                     save();
                   });
                 },
-              ),
-              key: Key(item.title),
-              direction: DismissDirection.endToStart,
-              background: Container(
-                color: Colors.red.withOpacity(0.4),
-              ),
-              onDismissed: (direction) {
-                remove(item);
-              },
-            );
+                remove: (item) {
+                  setState(() {
+                    remove(item);
+                  });
+                });
           }),
       floatingActionButton: FloatingActionButton(
         onPressed: add,
