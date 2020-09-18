@@ -3,6 +3,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'models/item.dart';
+import 'package:intl/intl.dart';
+import 'package:intl/date_symbol_data_local.dart';
 
 void main() => runApp(App());
 
@@ -25,9 +27,6 @@ class HomePage extends StatefulWidget {
 
   HomePage() {
     this.itens = [];
-    // itens.add(Item(title: "Fazer Atividade de Eletromagnetismo", done: false));
-    // itens.add(Item(title: "Estudar Flutter", done: true));
-    // itens.add(Item(title: "Fazer App Todo List", done: true));
   }
 
   @override
@@ -37,11 +36,16 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   var newTaskCtrl = TextEditingController();
 
-  void add() {
+  void add() async {
     if (newTaskCtrl.text.isEmpty) return;
 
+    await initializeDateFormatting("pt_BR", null);
+    var now = DateTime.now();
+    var formatter = DateFormat(DateFormat.YEAR_MONTH_DAY, 'pt_BR').format(now.toUtc());
+
     setState(() {
-      widget.itens.add(Item(title: newTaskCtrl.text, done: false));
+      widget.itens.add(
+          Item(title: newTaskCtrl.text, done: false, creationTime: formatter));
       newTaskCtrl.clear();
       save();
     });
@@ -58,13 +62,13 @@ class _HomePageState extends State<HomePage> {
     var preferences = await SharedPreferences.getInstance();
     var data = preferences.getString('data');
 
-    if(data != null) {
+    if (data != null) {
       Iterable decoded = jsonDecode(data);
       List<Item> result = decoded.map((x) => Item.fromJson(x)).toList();
       setState(() {
         widget.itens = result;
       });
-    } 
+    }
   }
 
   save() async {
@@ -104,6 +108,7 @@ class _HomePageState extends State<HomePage> {
                 value: item.done,
                 key: Key(item.title),
                 title: Text(item.title),
+                subtitle: Text(item.creationTime),
                 onChanged: (value) {
                   setState(() {
                     item.done = value;
